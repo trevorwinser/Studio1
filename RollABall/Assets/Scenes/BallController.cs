@@ -4,16 +4,28 @@ using UnityEngine.Events;
 public class BallController : MonoBehaviour
 {
     public UnityEvent<Vector2> OnMove = new UnityEvent<Vector2>();
-    public Rigidbody sphereRigidbody;
+    [SerializeField] private Rigidbody sphereRigidbody;
+    public float ballSpeed = 2f;
+    public float jumpForce = 1f;
+    bool isGrounded = false;
     void Start()
     {
     
     }
+    void OnCollisionEnter(Collision collision)
+    {
+        isGrounded = true;
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        isGrounded = false;
+    }
 
     void Update()
     {
-        [SerializeField] private Rigidbody sphereRigidbody;
-        [SerializeField] private float ballSpeed = 2f;
+
+        Vector2 inputVector = Vector2.zero;
         if (Input.GetKey(KeyCode.W))
         {
             inputVector += Vector2.up; // "a += b" <=> "a = a + b"
@@ -33,17 +45,23 @@ public class BallController : MonoBehaviour
         {
             inputVector += Vector2.left;
         }
-        OnMove?.Invoke(inputVector); // When is this used?
         
+
+        OnMove?.Invoke(inputVector); // When is this used?
+
         MoveBall(inputVector);
 
-        Debug.Log("Resultant Vector: " + inputVector);
-        Debug.Log("Resultant 3D Vector: " + inputXZPlane);
+
+        if (Input.GetKey(KeyCode.Space) && isGrounded)
+        {
+            sphereRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        }
     }
     public void MoveBall(Vector2 input)
     {
         Vector3 inputXZPlane = new(input.x, 0, input.y);
-        sphereRigidbody.AddForce(inputXZPlane * ballSpeed);
+        sphereRigidbody.linearVelocity = new Vector3(inputXZPlane.x * ballSpeed, sphereRigidbody.linearVelocity.y, inputXZPlane.z * ballSpeed);
     }
+
 
 }
